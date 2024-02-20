@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1993-2023, OFFIS e.V.
+ *  Copyright (C) 1993-2024, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -19,7 +19,7 @@
  *
  */
 
-#include "dcmtk/config/osconfig.h"    /* make sure OS specific configuration is included first */
+#include "dcmtk/config/osconfig.h"     /* make sure OS specific configuration is included first */
 #include "dcmtk/dcmqrdb/dcmqrsrv.h"
 #include "dcmtk/dcmqrdb/dcmqropt.h"
 #include "dcmtk/dcmdata/dcfilefo.h"
@@ -30,7 +30,7 @@
 #include "dcmtk/dcmqrdb/dcmqrcbm.h"    /* for class DcmQueryRetrieveMoveContext */
 #include "dcmtk/dcmqrdb/dcmqrcbg.h"    /* for class DcmQueryRetrieveGetContext */
 #include "dcmtk/dcmqrdb/dcmqrcbs.h"    /* for class DcmQueryRetrieveStoreContext */
-
+#include "dcmtk/dcmtls/tlsopt.h"       /* for DcmTLSOptions */
 
 static void findCallback(
   /* in */
@@ -100,7 +100,8 @@ DcmQueryRetrieveSCP::DcmQueryRetrieveSCP(
   const DcmQueryRetrieveConfig& config,
   const DcmQueryRetrieveOptions& options,
   const DcmQueryRetrieveDatabaseHandleFactory& factory,
-  const DcmAssociationConfiguration& associationConfiguration)
+  const DcmAssociationConfiguration& associationConfiguration,
+  DcmTLSOptions& tlsOptions)
 : config_(&config)
 , processtable_()
 , dbCheckFindIdentifier_(OFFalse)
@@ -108,6 +109,7 @@ DcmQueryRetrieveSCP::DcmQueryRetrieveSCP(
 , factory_(factory)
 , options_(options)
 , associationConfiguration_(associationConfiguration)
+, tlsOptions_(tlsOptions)
 {
 }
 
@@ -1000,7 +1002,7 @@ OFCondition DcmQueryRetrieveSCP::waitForAssociation(T_ASC_Network * theNet)
 
     if (ASC_associationWaiting(theNet, timeout))
     {
-        cond = ASC_receiveAssociation(theNet, &assoc, (int)options_.maxPDU_);
+        cond = ASC_receiveAssociation(theNet, &assoc, (int)options_.maxPDU_, NULL, NULL, tlsOptions_.secureConnectionRequested());
         if (cond.bad())
         {
           DCMQRDB_INFO("Failed to receive association: " << DimseCondition::dump(temp_str, cond));
@@ -1118,7 +1120,13 @@ OFCondition DcmQueryRetrieveSCP::waitForAssociation(T_ASC_Network * theNet)
             }
             else if (pid > 0)
             {
-                /* parent process, note process in table */
+                // parent process, note process in table and close network connection.
+
+                // set the parent process mode in the association.
+                // This will prevent the TLS connection to be shutdown by ASC_dropAssociation().
+                ASC_setParentProcessMode(assoc);
+
+                // note process in table
                 processtable_.addProcessToTable(pid, assoc);
             }
             else

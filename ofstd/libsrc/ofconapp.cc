@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1999-2022, OFFIS e.V.
+ *  Copyright (C) 1999-2024, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -172,7 +172,7 @@ void OFConsoleApplication::printHeader(const OFBool hostInfo,
         /* indicate that debug code is present */
         (*output) << " debug";
 #endif
-#ifdef ofstd_EXPORTS
+#ifdef DCMTK_SHARED
         /* indicate that shared library support is enabled */
         (*output) << " shared";
 #endif

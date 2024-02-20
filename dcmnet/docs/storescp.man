@@ -130,10 +130,10 @@ preferred network transfer syntaxes (not with --config-file):
           prefer MPEG4 AVC/H.264 Stereo HP / Level 4.2 TS
 
   +x4   --prefer-hevc
-          prefer HEVC H.265 Main Profile / Level 5.1 TS
+          prefer HEVC/H.265 Main Profile / Level 5.1 TS
 
   +x5   --prefer-hevc10
-          prefer HEVC H.265 Main 10 Profile / Level 5.1 TS
+          prefer HEVC/H.265 Main Profile / Level 5.1 TS
 
   +xr   --prefer-rle
           prefer RLE lossless TS
@@ -292,7 +292,7 @@ security profile:
 ciphersuite:
 
   +cc   --list-ciphers
-          show list of supported TLS ciphersuites and exit
+          list supported TLS ciphersuites and exit
 
   +cs   --cipher  [c]iphersuite name: string
           add ciphersuite to list of negotiated suites
@@ -989,6 +989,6 @@ It is an error if no data dictionary can be loaded.
 
 \section storescp_copyright COPYRIGHT
 
-Copyright (C) 1996-2023 by OFFIS e.V., Escherweg 2, 26121 Oldenburg, Germany.
+Copyright (C) 1996-2024 by OFFIS e.V., Escherweg 2, 26121 Oldenburg, Germany.
 
 */

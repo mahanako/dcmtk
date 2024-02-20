@@ -1400,7 +1400,7 @@ void ASC_getCopyOfIdentResponse(T_ASC_Parameters * params,
 OFCondition ASC_setIdentAC(
     T_ASC_Parameters * params,
     const char* response,
-    const Uint16& length )
+    const Uint16 length )
 {
   if (params == NULL)
     return ASC_NULLKEY;
@@ -2273,4 +2273,9 @@ destroyDULParamPresentationContextList(LST_HEAD ** lst)
         free(pc);
     }
     LST_Destroy(lst);
+}
+
+void ASC_setParentProcessMode(T_ASC_Association *association)
+{
+  if (association) DUL_setParentProcessMode(association->DULassociation);
 }

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1998-2023, OFFIS e.V.
+ *  Copyright (C) 1998-2024, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -1582,6 +1582,9 @@ OFCondition DcmTLSTransportLayer::convertOpenSSLX509VerificationError(int errorC
 void DcmTLSTransportLayer::initializeOpenSSL()
 {
   // initialize OpenSSL library
+#if defined(HAVE_OPENSSL_PROTOTYPE_OPENSSL_INIT_CRYPTO) && defined(OPENSSL_INIT_ATFORK)
+  (void) OPENSSL_init_crypto(OPENSSL_INIT_ATFORK, NULL);
+#endif
   SSL_library_init();
   SSL_load_error_strings();
   OpenSSL_add_all_algorithms();

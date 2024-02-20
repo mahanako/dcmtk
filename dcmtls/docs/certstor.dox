@@ -156,7 +156,7 @@ using the following option:
 
 \verbatim
   +cc   --list-ciphers
-          show list of supported TLS ciphersuites and exit
+          list supported TLS ciphersuites and exit
 \endverbatim
 
 Option \c \--cipher can be specified more than once to add multiple

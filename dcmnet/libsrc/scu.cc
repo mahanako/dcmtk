@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2008-2023, OFFIS e.V.
+ *  Copyright (C) 2008-2024, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -55,6 +55,7 @@ DcmSCU::DcmSCU()
     , m_verbosePCMode(OFFalse)
     , m_datasetConversionMode(OFFalse)
     , m_progressNotificationMode(OFTrue)
+    , m_secureConnectionEnabled(OFFalse)
 {
     OFStandard::initializeNetwork();
 }
@@ -337,6 +338,8 @@ OFCondition DcmSCU::useSecureConnection(DcmTransportLayer* tlayer)
     OFCondition cond = ASC_setTransportLayer(m_net, tlayer, OFFalse /* do not take over ownership */);
     if (cond.good())
         cond = ASC_setTransportLayerType(m_params, OFTrue /* use TLS */);
+
+    if (cond.good()) m_secureConnectionEnabled = OFTrue;
     return cond;
 }
 
@@ -1619,7 +1622,7 @@ OFCondition DcmSCU::sendCANCELRequest(const T_ASC_PresentationContextID presID,
     if (!isConnected())
         return DIMSE_ILLEGALASSOCIATION;
 
-    if (msgIDBeingRespondedTo > OFstatic_cast(Sint32,UINT16_MAX) || msgIDBeingRespondedTo < -1)
+    if (msgIDBeingRespondedTo > 65535 || msgIDBeingRespondedTo < -1)
         return EC_IllegalParameter;
 
     /* Prepare DIMSE data structures for issuing request */
@@ -2607,7 +2610,7 @@ Uint32 DcmSCU::getMaxReceivePDULength() const
 
 OFBool DcmSCU::getTLSEnabled() const
 {
-    return OFFalse;
+    return m_secureConnectionEnabled;
 }
 
 T_DIMSE_BlockingMode DcmSCU::getDIMSEBlockingMode() const

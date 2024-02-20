@@ -184,7 +184,7 @@ security profile:
 ciphersuite:
 
   +cc   --list-ciphers
-          show list of supported TLS ciphersuites and exit
+          list supported TLS ciphersuites and exit
 
   +cs   --cipher  [c]iphersuite name: string
           add ciphersuite to list of negotiated suites
@@ -388,6 +388,6 @@ It is an error if no data dictionary can be loaded.
 
 \section echoscu_copyright COPYRIGHT
 
-Copyright (C) 1994-2023 by OFFIS e.V., Escherweg 2, 26121 Oldenburg, Germany.
+Copyright (C) 1994-2024 by OFFIS e.V., Escherweg 2, 26121 Oldenburg, Germany.
 
 */

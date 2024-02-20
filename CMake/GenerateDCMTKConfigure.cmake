@@ -143,6 +143,9 @@ endif()
 
 # Configure dictionary path and install prefix
 if(WIN32 AND NOT CYGWIN)
+  # create cache variable, default value is "OFF"
+  set(DCMTK_USE_WIN32_PROGRAMDATA OFF CACHE BOOL "Install configuration and data files in %PROGRAMDATA%")
+
   # Set DCMTK_PREFIX needed within some code. Be sure that all / are replaced by \\.
   set(DCMTK_PREFIX "${CMAKE_INSTALL_PREFIX}")
   string(REGEX REPLACE "/" "\\\\\\\\" DCMTK_PREFIX "${DCMTK_PREFIX}")
@@ -151,21 +154,40 @@ if(WIN32 AND NOT CYGWIN)
   set(ENVIRONMENT_PATH_SEPARATOR ";")
 
   # Set default directory for configuration and support data.
-  set(CMAKE_INSTALL_FULL_SYSCONFDIR "%PROGRAMDATA%\\\\dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}\\\\etc")
-  set(CMAKE_INSTALL_FULL_DATADIR    "%PROGRAMDATA%\\\\dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}\\\\share")
-  set(CMAKE_INSTALL_FULL_DOCDIR     "%PROGRAMDATA%\\\\dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}\\\\doc")
+  if(DCMTK_USE_WIN32_PROGRAMDATA)
+    set(PROGRAMDATA "$ENV{PROGRAMDATA}")
+    string(REPLACE "\\" "/" PROGRAMDATA "${PROGRAMDATA}")
+    set(CMAKE_INSTALL_FULL_SYSCONFDIR "${PROGRAMDATA}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}/etc")
+    set(CMAKE_INSTALL_FULL_DATADIR    "${PROGRAMDATA}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}/share")
+    set(CMAKE_INSTALL_FULL_DOCDIR     "${PROGRAMDATA}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}/doc")
 
-  # These variables are defined as macros in osconfig.h and must end with a path separator
-  set(DCMTK_DEFAULT_CONFIGURATION_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}${PATH_SEPARATOR}")
-  set(DCMTK_DEFAULT_SUPPORT_DATA_DIR "${CMAKE_INSTALL_FULL_DATADIR}${PATH_SEPARATOR}")
+    # These variables are defined as macros in osconfig.h and must end with a path separator
+    set(DCMTK_DEFAULT_CONFIGURATION_DIR "%PROGRAMDATA%\\\\dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}\\\\etc${PATH_SEPARATOR}")
+    set(DCMTK_DEFAULT_SUPPORT_DATA_DIR  "%PROGRAMDATA%\\\\dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}\\\\share${PATH_SEPARATOR}")
+  else()
+    set(CMAKE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}")
+    set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_DOCDIR}-${DCMTK_COMPLETE_PACKAGE_VERSION}")
+    set(DCMTK_DEFAULT_CONFIGURATION_DIR "")
+    set(DCMTK_DEFAULT_SUPPORT_DATA_DIR "")
+  endif()
 
   # Set dictionary path to the data dir inside install main dir (prefix)
   if(DCMTK_DEFAULT_DICT STREQUAL "external")
-    set(DCM_DICT_DEFAULT_PATH "${CMAKE_INSTALL_FULL_DATADIR}\\\\dicom.dic")
+    if(DCMTK_USE_WIN32_PROGRAMDATA)
+      set(DCM_DICT_DEFAULT_PATH "${CMAKE_INSTALL_FULL_DATADIR}\\\\dicom.dic")
+    else()
+      set(DCM_DICT_DEFAULT_PATH "${DCMTK_PREFIX}\\\\${CMAKE_INSTALL_DATADIR}\\\\dcmtk\\\\dicom.dic")
+    endif()
+
     # If private dictionary should be utilized, add it to default dictionary path.
     if(ENABLE_PRIVATE_TAGS)
-      set(DCM_DICT_DEFAULT_PATH "${DCM_DICT_DEFAULT_PATH};${CMAKE_INSTALL_FULL_DATADIR}\\\\private.dic")
+      if(DCMTK_USE_WIN32_PROGRAMDATA)
+        set(DCM_DICT_DEFAULT_PATH "${DCM_DICT_DEFAULT_PATH};${CMAKE_INSTALL_FULL_DATADIR}\\\\private.dic")
+      else()
+        set(DCM_DICT_DEFAULT_PATH "${DCM_DICT_DEFAULT_PATH};${DCMTK_PREFIX}\\\\${CMAKE_INSTALL_DATADIR}\\\\dcmtk\\\\private.dic")
+      endif()
     endif()
+
      # Again, for Windows strip all / from path and replace it with \\.
     string(REGEX REPLACE "/" "\\\\\\\\" DCM_DICT_DEFAULT_PATH "${DCM_DICT_DEFAULT_PATH}")
   else()
@@ -180,9 +202,9 @@ else()
 
   # Modify the installation paths for configuration files, data files and documents
   # by adding a subdirectory with the DCMTK name and version number
-  set(CMAKE_INSTALL_FULL_SYSCONFDIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}")
-  set(CMAKE_INSTALL_FULL_DATADIR "${CMAKE_INSTALL_FULL_DATADIR}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}")
-  set(CMAKE_INSTALL_FULL_DOCDIR "${CMAKE_INSTALL_FULL_DOCDIR}-${DCMTK_COMPLETE_PACKAGE_VERSION}")
+  set(CMAKE_INSTALL_SYSCONFDIR "${CMAKE_INSTALL_SYSCONFDIR}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}")
+  set(CMAKE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/dcmtk-${DCMTK_COMPLETE_PACKAGE_VERSION}")
+  set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_DOCDIR}-${DCMTK_COMPLETE_PACKAGE_VERSION}")
 
   # These variables are defined as macros in osconfig.h and must end with a path separator
   set(DCMTK_DEFAULT_CONFIGURATION_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/")
@@ -991,17 +1013,10 @@ function(DCMTK_CHECK_ENABLE_LFS)
     set(MESSAGE "Checking whether explicit large file support (LFS64) is available")
     message(STATUS "${MESSAGE}")
     DCMTK_LFS_TRY_COMPILE(RESULT "lfs64.cc" "" "")
-    if(NOT RESULT)
-      DCMTK_LFS_TRY_COMPILE(RESULT "lfs64.cc" "" "-D_LARGEFILE64_SOURCE")
-      if(RESULT)
-        set(DCMTK_LFS64_DEFINITIONS "-D_LARGEFILE64_SOURCE")
-        set(MESSAGE_RESULT "yes, with ${DCMTK_LFS64_DEFINITIONS}")
-      endif()
-    else()
-      set(MESSAGE_RESULT "yes")
-    endif()
     if(RESULT)
+      set(MESSAGE_RESULT "yes")
       set(DCMTK_ENABLE_LFS "lfs64")
+      set(DCMTK_LFS64_DEFINITIONS "-D_LARGEFILE64_SOURCE")
       set(DCMTK_LFS64_DEFINITIONS "${DCMTK_LFS64_DEFINITIONS}" CACHE INTERNAL "which compiler definitions to set for enabling LFS64 support")
     endif()
     set(DCMTK_LFS64_AVAILABLE "${RESULT}" CACHE INTERNAL "whether LFS64 is available or not" FORCE)

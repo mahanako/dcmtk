@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(dcmtk, 3.6.7, [bugs@dcmtk.org], [dcmtk-3.6.7], [https://www.dcmtk.org/])
+AC_INIT(dcmtk, 3.6.8, [bugs@dcmtk.org], [dcmtk-3.6.8], [https://www.dcmtk.org/])
 AC_PREREQ(2.60)
 AC_CONFIG_SRCDIR(Makefile.in)
 AC_CONFIG_HEADERS(include/dcmtk/config/osconfig.h)
@@ -10,7 +10,7 @@ dnl -------------------------------------------------------
 dnl Additional Package Information
 dnl -------------------------------------------------------
 
-PACKAGE_VERSION_NUMBER=367
+PACKAGE_VERSION_NUMBER=368
 PACKAGE_VERSION_SUFFIX="+"
 PACKAGE_DATE="DEV"
 AC_DEFINE_UNQUOTED(PACKAGE_VERSION_NUMBER,${PACKAGE_VERSION_NUMBER},[Define to the version number of this package.])
@@ -1005,7 +1005,7 @@ AS_HELP_STRING([--without-openssl], [don't include OpenSSL support])],
 [ case "$withval" in
   yes)
       AC_TRY_COMPILE([#include <openssl/ssl.h>], [
-#if OPENSSL_VERSION_NUMBER < 0x10001000L
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
 #error OpenSSL too old
 #endif
 ],
@@ -1013,7 +1013,7 @@ AS_HELP_STRING([--without-openssl], [don't include OpenSSL support])],
     AC_DEFINE(WITH_OPENSSL)
     OPENSSL_WORKS="yes"
     OPENSSLLIBS="-lssl -lcrypto $OPENSSLLIBS" ],
-   [ AC_MSG_RESULT(no - DCMTK requires OpenSSL version 1.0.1 or newer)] )
+   [ AC_MSG_RESULT(no - DCMTK requires OpenSSL version 1.1.1 or newer)] )
     ;;
   *)
     AC_MSG_RESULT(no)
@@ -1024,7 +1024,7 @@ AS_HELP_STRING([--without-openssl], [don't include OpenSSL support])],
   AC_TRY_LINK([#include <openssl/ssl.h>], [(void) TLSv1_method()],
     [
       AC_TRY_COMPILE([#include <openssl/ssl.h>], [
-#if OPENSSL_VERSION_NUMBER < 0x10001000L
+#if OPENSSL_VERSION_NUMBER < 0x10101000L
 #error OpenSSL too old
 #endif
 ],
@@ -1032,7 +1032,7 @@ AS_HELP_STRING([--without-openssl], [don't include OpenSSL support])],
       AC_DEFINE(WITH_OPENSSL)
       OPENSSL_WORKS="yes"
       OPENSSLLIBS="-lssl -lcrypto $OPENSSLLIBS" ],
-      [ AC_MSG_RESULT(no - DCMTK requires OpenSSL version 1.0.1 or newer)] )],
+      [ AC_MSG_RESULT(no - DCMTK requires OpenSSL version 1.1.1 or newer)] )],
     [AC_MSG_RESULT(no)])
   LIBS="$SAVELIBS"] )
 
@@ -1076,6 +1076,7 @@ AC_CHECK_EXT_LIB_PROTOTYPE(TLS_method, OpenSSL, openssl/ssl.h)
 AC_CHECK_EXT_LIB_COMPILES(X509_STORE_CTX_get0_cert, OpenSSL, openssl/x509_vfy.h, [X509_STORE_CTX_get0_cert])
 AC_CHECK_EXT_LIB_PROTOTYPE(X509_STORE_get0_param, OpenSSL, openssl/x509.h)
 AC_CHECK_EXT_LIB_PROTOTYPE(X509_get_signature_nid, OpenSSL, openssl/x509.h)
+AC_CHECK_EXT_LIB_COMPILES(OPENSSL_init_crypto, OpenSSL, openssl/crypto.h, [OPENSSL_init_crypto])
 
 dnl test presence of functions, constants and macros needed for the dcmsign module
 AC_CHECK_EXT_LIB_PROTOTYPE(ASN1_STRING_get0_data, OpenSSL, openssl/asn1.h)

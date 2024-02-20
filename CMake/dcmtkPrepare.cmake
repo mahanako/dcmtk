@@ -29,14 +29,12 @@ endif()
 
 
 # Basic version information
-# (Starting with version 3.5.5, an odd number at the last position indicates
-#  a development snapshot and an even number indicates an official release.)
 set(DCMTK_MAJOR_VERSION 3)
 set(DCMTK_MINOR_VERSION 6)
-set(DCMTK_BUILD_VERSION 7)
+set(DCMTK_BUILD_VERSION 8)
 # The ABI is not guaranteed to be stable between different snapshots/releases,
 # so this particular version number is increased for each snapshot or release.
-set(DCMTK_ABI_VERSION 17)
+set(DCMTK_ABI_VERSION 18)
 
 # Package "release" settings (some are currently unused and, therefore, disabled)
 set(DCMTK_PACKAGE_NAME "dcmtk")
@@ -52,7 +50,11 @@ set(DCMTK_PACKAGE_VERSION_SUFFIX "+")
 option(DCMTK_LINK_STATIC "Statically link all libraries and tools with the runtime and third party libraries." OFF)
 # Modify linker flags and libraries for static builds if enabled by the user
 if(DCMTK_LINK_STATIC)
-    set(CMAKE_EXE_LINKER_FLAGS "-static")
+    if (NOT APPLE)
+        # MacOS does not support static libraries. DCMTK_LINK_STATIC is still useful on MacOS though,
+        # since it will create binaries that only depend on MacOS's libc.
+        set(CMAKE_EXE_LINKER_FLAGS "-static")
+    endif()
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
     # remove "-Wl,-Bdynamic"
     list(REMOVE_ITEM CMAKE_EXE_LINK_DYNAMIC_C_FLAGS "-Wl,-Bdynamic")
@@ -718,6 +720,7 @@ if(DCMTK_WITH_OPENSSL)
   CHECK_FUNCTIONWITHHEADER_EXISTS("X509_STORE_CTX_get0_cert" "openssl/x509_vfy.h" HAVE_OPENSSL_PROTOTYPE_X509_STORE_CTX_GET0_CERT)
   CHECK_FUNCTIONWITHHEADER_EXISTS("X509_STORE_get0_param" "openssl/x509.h" HAVE_OPENSSL_PROTOTYPE_X509_STORE_GET0_PARAM)
   CHECK_FUNCTIONWITHHEADER_EXISTS("X509_get_signature_nid" "openssl/x509.h" HAVE_OPENSSL_PROTOTYPE_X509_GET_SIGNATURE_NID)
+  CHECK_FUNCTIONWITHHEADER_EXISTS("OPENSSL_init_crypto" "openssl/crypto.h" HAVE_OPENSSL_PROTOTYPE_OPENSSL_INIT_CRYPTO)
 
   # test presence of functions, constants and macros needed for the dcmsign module
   CHECK_FUNCTIONWITHHEADER_EXISTS("ASN1_STRING_get0_data" "openssl/asn1.h" HAVE_OPENSSL_PROTOTYPE_ASN1_STRING_GET0_DATA)
