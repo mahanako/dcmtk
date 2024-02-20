@@ -46,7 +46,13 @@
 #include "dcmtk/dcmdata/dcwcache.h"    /* for class DcmWriteCache */
 #include "dcmtk/dcmdata/dcjson.h"
 
+#include "MessageRelay.h"
 
+namespace {
+MESSAGE_RELAY_SUCCESS(DcmFileFormat)
+MESSAGE_RELAY_FATAL(DcmFileFormat)
+MESSAGE_RELAY_SIMPLE_NOTIFY(DcmFileFormat)
+}
 // ********************************
 
 
@@ -819,9 +825,13 @@ OFCondition DcmFileFormat::write(DcmOutputStream &outStream,
 {
     /* if the transfer state of this is not initialized, this is an illegal call */
     if (getTransferState() == ERW_notInitialized)
+    {
         errorFlag = EC_IllegalCall;
+        fatal("ERW_notInitialized");
+    }
     else
     {
+        notify("write() started");
         /* if this is not an illegal call, do something */
 
         /* assign data set and the meta information header to local variables */
@@ -834,13 +844,21 @@ OFCondition DcmFileFormat::write(DcmOutputStream &outStream,
             outxfer = dataset->getOriginalXfer();
         /* check if the stream reported an error so far */
         errorFlag = outStream.status();
+
         /* check if we can actually write data to the stream; in certain cases we cannot. */
         if (outxfer == EXS_Unknown || outxfer == EXS_BigEndianImplicit)
+        {
             errorFlag = EC_IllegalCall;
+            fatal(QStringLiteral("outxfer == %1").arg(outxfer));
+        }
         else if (itemList->empty())
+        {
             errorFlag = EC_CorruptedData;
+            fatal("Itemlist is empty");
+        }
         else if (errorFlag.good() && getTransferState() != ERW_ready)
         {
+            notify("running...");
             /* in this case we can write data to the stream */
 
             /* if this function was called for the first time for the dataset object, the transferState is */
@@ -848,6 +866,7 @@ OFCondition DcmFileFormat::write(DcmOutputStream &outStream,
             /* item list pointer to the fist element and we need to set the transfer state to ERW_inWork. */
             if (getTransferState() == ERW_init)
             {
+                notify("ERW_init");
                 validateMetaInfo(outxfer, writeMode);
                 itemList->seek(ELP_first);
                 setTransferState(ERW_inWork);
@@ -856,6 +875,7 @@ OFCondition DcmFileFormat::write(DcmOutputStream &outStream,
             /* information which is included in this to the buffer which was passed. */
             if (getTransferState() == ERW_inWork)
             {
+                notify("ERW_inWork");
                 /* write meta header information */
                 errorFlag = metainfo->write(outStream, outxfer, enctype, wcache);
                 /* recalculate the instance length */

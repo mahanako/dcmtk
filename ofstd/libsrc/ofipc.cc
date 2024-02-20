@@ -362,8 +362,10 @@ OFCondition OFIPCMessageQueueServer::createQueue(const char *name, Uint32 port)
   slotname += "\\";
   slotname += port_str;
 
+  std::wstring wslotname = std::wstring(slotname.begin(), slotname.end());
+
   // create mailslot
-  HANDLE hSlot = CreateMailslot(slotname.c_str(), 0, 0, NULL);
+  HANDLE hSlot = CreateMailslot(wslotname.c_str(), 0, 0, NULL);
   if (hSlot == INVALID_HANDLE_VALUE)
   {
     // report an error if the mailslot creation failed
@@ -845,8 +847,10 @@ OFCondition OFIPCMessageQueueClient::openQueue(const char *name, Uint32 port)
   slotname += "\\";
   slotname += port_str;
 
+  std::wstring wslotname = std::wstring(slotname.begin(), slotname.end());
+
   // open mailslot
-  HANDLE hFile = CreateFile(slotname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,
+  HANDLE hFile = CreateFile(wslotname.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL,
    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
   if (hFile == INVALID_HANDLE_VALUE)
